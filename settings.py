@@ -1,0 +1,2 @@
+DEFAULT_LOGIN = "username"
+DEFAULT_PASSWORD = "12345"
