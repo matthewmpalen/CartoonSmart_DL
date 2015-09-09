@@ -1,67 +1,51 @@
+# Python
+from argparse import ArgumentParser
+import logging
 import os
-import sys
+from downloaders import CartoonSmartDownloader
+
+# Local
 import settings
-from utils.CartoonsmartDownloader import CartoonsmartDownloader     
 
+logging.basicConfig(level=logging.WARNING, 
+    filename='logs/{0}.log'.format(__file__), filemode='w')
 
-args = sys.argv[1:]
+logger = logging.getLogger(__name__)
 
-if (not args or (len(sys.argv) == 2 and sys.argv[1] in ['-help', '--h'])):
-    print("""
-Usage:
-    python %s [-l login] [-p password] [-o output_dir] (-list url | -video url)
-    
-List url or video url must be provided. If login/password not given, info
-from settings.py will be used. If output_dir is not given, current
-working directory will be used.
+def parse_args():
+    arg_parser = ArgumentParser()
+    arg_parser.add_argument('-l', nargs='?', default=settings.DEFAULT_LOGIN, 
+        help='Login username')
+    arg_parser.add_argument('-p', nargs='?', default=settings.DEFAULT_PASSWORD, 
+        help='Password')
+    arg_parser.add_argument('-o', nargs='?', default=os.getcwd(), 
+        help='Output filepath')
+    arg_parser.add_argument('--async', action='store_true', default=False, 
+        help='Asynchronous downloads')
 
-Example usage:
-    python %s -list http://cartoonsmart.com/maze-game-with-swift-and-sprite-kit-subscriber-access/
-""" % (sys.argv[0], sys.argv[0]))
-    sys.exit()
+    group = arg_parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-list', help='List URL')
+    group.add_argument('-video', help='Video URL')
 
+    return arg_parser.parse_args()
 
-out_path = os.getcwd()
-login = settings.DEFAULT_LOGIN
-password = settings.DEFAULT_PASSWORD
+def main():
+    args = parse_args()
 
+    login, password, out_path, async = args.l, args.p, args.o, args.async
+    list_, video = args.list, args.video
 
-arg_name = None
-is_arg_name = True
-list_ = None
-video = None
-for arg in sys.argv[1:]:
-    if is_arg_name:
-        if arg not in ['-l', '-p', '-o', '-list', '-video']:
-            print('Unknown argument: %s' % arg)
-            sys.exit(1)
-        is_arg_name = False
-        arg_name = arg
+    msg = 'login    {0}\npassword {1}\nout_path {2}'.format(login, password, 
+        out_path)
+    logger.info(msg)
+    msg = 'list     {0}\nvideo    {1}'.format(list_, video)
+    logger.info(msg)
+
+    cdl = CartoonSmartDownloader(login, password, async)
+    if list_:
+        cdl.download_list(list_, out_path)
     else:
-        if arg_name == '-l':
-            login = arg
-        elif arg_name == '-p':
-            password = arg
-        elif arg_name == '-o':
-            out_path = arg
-        elif arg_name == '-list':
-            list_ = arg
-        elif arg_name == '-video':
-            video = arg
-            
-        is_arg_name = True
+        cdl.download_video_page(video, out_path, get_title=True)
 
-if list_ and video:
-    print("List and video cannot be set at the same time")
-    sys.exit(1)
-if not list_ and not video:
-    print("Not enough arguments")
-    sys.exit(1)
-
-cdl = CartoonsmartDownloader(login, password)
-if list_:
-    cdl.download_list(list_, out_path)
-else:
-    cdl.download_video_page(video, out_path, get_title=True)
-    
-
+if __name__ == '__main__':
+    main()
