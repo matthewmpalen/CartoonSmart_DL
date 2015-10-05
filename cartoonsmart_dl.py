@@ -1,3 +1,6 @@
+# Compatibility
+from __future__ import absolute_import
+
 # Python
 from argparse import ArgumentParser
 import logging
