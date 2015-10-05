@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 import requests
 
 # Local
-from exceptions import CartoonSmartAuthError, CartoonSmartDownloadError
+import exceptions
 from utils import convert_byte_size
 
 logging.basicConfig(level=logging.INFO, 
@@ -124,7 +124,7 @@ class CartoonSmartDownloader(Downloader):
         if 'Log Out</a>' not in response.text:
             msg = 'Failed to login'
             logger.exception(msg)
-            raise CartoonSmartAuthError(msg)
+            raise exceptions.CartoonSmartAuthError(msg)
         
         self._is_logged_in = True
         msg = '[+] Login successful'
@@ -161,7 +161,7 @@ class CartoonSmartDownloader(Downloader):
         if not sections:
             msg = 'Failed to find list of sections'
             logger.exception(msg)
-            raise CartoonSmartDownloadError(msg)
+            raise exceptions.CartoonSmartDownloadError(msg)
         
         dest = os.path.join(dest, self._format_filename(title))
         self._create_directory(dest)
