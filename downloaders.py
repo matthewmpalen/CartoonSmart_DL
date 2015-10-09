@@ -237,7 +237,7 @@ class CartoonSmartDownloader(Downloader):
         if not matches:
             msg = '[-] Failed to find video URL!'
             logger.error(msg)
-            raise CartoonSmartDownloaderException(msg)
+            raise exceptions.CartoonSmartDownloadError(msg)
         
         # Only pick the last/largest in matches
         url = matches[-1].split('"url":')[1].replace('"', '')
