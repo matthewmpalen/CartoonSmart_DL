@@ -12,7 +12,6 @@ from bs4 import BeautifulSoup
 import requests
 
 # Local
-import exceptions
 from utils import convert_byte_size
 
 logging.basicConfig(level=logging.INFO, 
@@ -77,6 +76,12 @@ class Downloader(object):
         sys.stdout.flush()
 
 class CartoonSmartDownloader(Downloader):
+    class CartoonSmartAuthError(Exception):
+        pass
+
+    class CartoonSmartDownloadError(Exception):
+        pass
+
     AUTH_URL = 'http://cartoonsmart.com/checkout-2/my-account/'
     VIDEO_REGEX = r'\"url\":"https://pdlvimeocdn-a.akamaihd.net/\d+/\d+/\d+\.mp4\?token2=\d+_\w+&aksessionid=\w+\"'
  
@@ -124,7 +129,7 @@ class CartoonSmartDownloader(Downloader):
         if 'Log Out</a>' not in response.text:
             msg = 'Failed to login'
             logger.exception(msg)
-            raise exceptions.CartoonSmartAuthError(msg)
+            raise CartoonSmartDownloader.CartoonSmartAuthError(msg)
         
         self._is_logged_in = True
         msg = '[+] Login successful'
@@ -161,7 +166,7 @@ class CartoonSmartDownloader(Downloader):
         if not sections:
             msg = 'Failed to find list of sections'
             logger.exception(msg)
-            raise exceptions.CartoonSmartDownloadError(msg)
+            raise CartoonSmartDownloader.CartoonSmartDownloadError(msg)
         
         dest = os.path.join(dest, self._format_filename(title))
         self._create_directory(dest)
@@ -237,7 +242,7 @@ class CartoonSmartDownloader(Downloader):
         if not matches:
             msg = '[-] Failed to find video URL!'
             logger.error(msg)
-            raise exceptions.CartoonSmartDownloadError(msg)
+            raise CartoonSmartDownloader.CartoonSmartDownloadError(msg)
         
         # Only pick the last/largest in matches
         url = matches[-1].split('"url":')[1].replace('"', '')
